@@ -7,10 +7,11 @@
 module Application where
 
 ------------------------------------------------------------------------------
-import qualified Data.ByteString.Char8 as B
 import Data.IORef
 import Data.Lens.Template
+import Data.Text
 import Data.Time.Clock
+
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 
@@ -18,8 +19,14 @@ import Snap.Snaplet.Heist
 data App = App
     { _heist :: Snaplet (Heist App)
     , _startTime :: UTCTime
-    , _message :: IORef B.ByteString
+    , _message :: IORef (Maybe Message)
     }
+
+
+-- <jaspervdj> Text for unicode text (e.g. human-readable) and ByteString for binary data or text with an unknown encoding
+data Message = Message
+               { _text :: Text }
+               deriving Show
 
 makeLens ''App
 
