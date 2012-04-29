@@ -67,43 +67,35 @@ currentTimeSplice = do
 ------------------------------------------------------------------------------
 -- | The Message
 
+getMessageRefMessage :: HeistT AppHandler (IORef (Maybe Message), Maybe Message)
+getMessageRefMessage = do
+  msgRef <- gets _message
+  msg <- liftIO . readIORef $ msgRef
+  return (msgRef, msg)
+
+getMessageRefMessage2 :: Handler App App (IORef (Maybe Message), Maybe Message)
+getMessageRefMessage2 = do
+  msgRef <- gets _message
+  msg <- liftIO . readIORef $ msgRef
+  return (msgRef, msg)
+
+writeJustRef :: MonadIO m => IORef (Maybe a) -> a -> m ()
+writeJustRef ref v = liftIO $ writeIORef ref (Just v)
+
 messageSplice :: Splice AppHandler
 messageSplice = do
-    msgRef <- gets _message
-    msg <- liftIO . readIORef $ msgRef
-    let msg' = case msg of
-                 Just (Message s) -> s
-                 Nothing -> "N/A"
-    return [TextNode msg']
-
--- Old non digestive-functor version
---messageHandler :: Handler App App ()
---messageHandler = method GET getter <|> method POST setter
---  where
---    getter = do
---        msgRef <- gets _message
---        msg <- liftIO . readIORef $ msgRef
---        writeBS msg
---    setter = do
---        newMsg <- getParam "msg"
---        msgRef <- gets _message
---        liftIO $ maybe (return ()) (writeIORef msgRef) newMsg
---        index
+    (_, msg) <- getMessageRefMessage
+    let msgText = maybe "N/A" _text msg
+    return [TextNode msgText]
 
 messageHandler :: Handler App App ()
 messageHandler = do
-  msgRef <- gets _message
-  msg <- liftIO . readIORef $ msgRef
-  let msgText = case msg of Just (Message s) -> s; Nothing -> "N/A"
+  (msgRef, msg) <- getMessageRefMessage2
 
   (view, result) <- runForm "message" (messageForm msg)
   case result of
-    Just newMsg -> do
-        liftIO $ writeIORef msgRef (Just newMsg)
-        index
-    Nothing ->
-        -- index
-        heistLocal (bindDigestiveSplices view) $ render "message-form"
+    Just newMsg -> writeJustRef msgRef newMsg >> index
+    Nothing -> heistLocal (bindDigestiveSplices view) $ render "message-form"
 
 -- TODO Fix
 --messageFormSplice :: Splice AppHandler

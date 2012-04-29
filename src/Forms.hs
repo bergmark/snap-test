@@ -9,7 +9,7 @@ import Application
 
 messageForm :: Monad m => Maybe Message -> Form Text m Message
 messageForm m = Message
-    <$> "message" .: check "Message length must be >= 4" checkMessageLength (text (Just (maybe "empty" _text m)))
+    <$> "message" .: check "Message length must be >= 4" checkMessageLength (text (Just (maybe "" _text m)))
 
 checkMessageLength :: Text -> Bool
 checkMessageLength = (>= 4) . T.length

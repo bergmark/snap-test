@@ -31,9 +31,6 @@
           <td><message/></td>
         </tr>
       </table>
-      <div>
-        <apply template="message-form"/>
-      </div>
     </div>
   </body>
 </html>
