@@ -25,6 +25,10 @@
           <td>Last posted message:</td>
           <td><message/></td>
         </tr>
+        <tr>
+          <td>Edit message:</td>
+          <td><message-form/></td>
+        </tr>
       </table>
     </div>
   </body>

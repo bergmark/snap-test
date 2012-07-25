@@ -33,9 +33,13 @@ Executable snap-test
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.5,
     xmlhtml == 0.2.*,
-    digestive-functors >= 0.3.0.2,
-    digestive-functors-snap >= 0.3.2.0,
-    digestive-functors-heist >= 0.3.0.1
+    digestive-functors == 0.5.*,
+    digestive-functors-snap == 0.5.*,
+    digestive-functors-heist == 0.5.*,
+    directory == 1.1.*,
+    filepath == 1.3.*,
+    process == 1.1.*,
+    fay == 0.1.*
 
   if flag(development)
     cpp-options: -DDEVELOPMENT

@@ -26,6 +26,7 @@ import           Snap.Snaplet.Heist
 import           Snap.Util.FileServe
 import           Text.Digestive.Snap hiding (method)
 import           Text.Digestive.Heist
+import qualified Text.Digestive.View
 import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
 ------------------------------------------------------------------------------
@@ -45,7 +46,8 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
     indexSplices =
         [ ("start-time",   startTimeSplice)
         , ("current-time", currentTimeSplice)
-        , ("message", messageSplice)
+        , ("message",      messageSplice)
+        , ("message-form", messageFormSplice)
         ]
 
 
@@ -97,12 +99,16 @@ messageHandler = do
     Just newMsg -> writeJustRef msgRef newMsg >> index
     Nothing -> heistLocal (bindDigestiveSplices view) $ render "message-form"
 
--- TODO Fix
---messageFormSplice :: Splice AppHandler
---messageFormSplice = do
---  (view, result) <- runForm "message" messageForm
---  heistLocal (bindDigestiveSplices view) $ render "message-form"
+messageFormSplice :: Splice AppHandler
+messageFormSplice = do
+  (msgRef, msg) <- getMessageRefMessage
+  (view :: Text.Digestive.View.View T.Text, result :: Maybe Message) <- runForm "message" (messageForm msg)
+  case result of
+    Just newMsg -> writeJustRef msgRef newMsg >> splice view
+    Nothing -> splice view
 
+    where
+      splice view = callTemplate "message-form" (digestiveSplices view)
 
 ------------------------------------------------------------------------------
 -- | renders the echo page.
