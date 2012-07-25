@@ -29,6 +29,7 @@ Executable snap-test
     snap == 0.9.*,
     snap-core   == 0.9.*,
     snap-server == 0.9.*,
+    snap-loader-dynamic == 0.9.*,
     snap-loader-static == 0.9.*,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.5,

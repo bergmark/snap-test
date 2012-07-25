@@ -6,8 +6,9 @@
 --   together and is exported by this module.
 --
 module Site
-  ( app
-  ) where
+--  ( app
+--  ) where
+       where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
@@ -19,14 +20,15 @@ import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Data.Time.Clock
-
+------------------------------------------------------------------------------
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Session
+import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import           Text.Digestive.Snap hiding (method)
 import           Text.Digestive.Heist
-import qualified Text.Digestive.View
 import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
 ------------------------------------------------------------------------------
@@ -42,14 +44,6 @@ import           Forms
 -- would be given every request.
 index :: Handler App App ()
 index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
-  where
-    indexSplices =
-        [ ("start-time",   startTimeSplice)
-        , ("current-time", currentTimeSplice)
-        , ("message",      messageSplice)
-        , ("message-form", messageFormSplice)
-        ]
-
 
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the start time.
@@ -102,7 +96,7 @@ messageHandler = do
 messageFormSplice :: Splice AppHandler
 messageFormSplice = do
   (msgRef, msg) <- getMessageRefMessage
-  (view :: Text.Digestive.View.View T.Text, result :: Maybe Message) <- runForm "message" (messageForm msg)
+  (view, result) <- runForm "message" (messageForm msg)
   case result of
     Just newMsg -> writeJustRef msgRef newMsg >> splice view
     Nothing -> splice view
@@ -119,6 +113,18 @@ echo = do
   where
     decodedParam p = fromMaybe "" <$> getParam p
 
+------------------------------------------------------------------------------
+-- | Sessions
+-- TODO
+--sessionSplice :: Splice (Handler App SessionManager)
+--sessionSplice = do
+--    msg <- sessionToList
+--    return $ [TextNode $ T.pack $ show $ "hej"]
+
+sessionHandler :: Handler App SessionManager ()
+sessionHandler = do
+  msg <- sessionToList
+  heistLocal (bindString "session-info" (T.pack $ show $ msg)) $ render "session"
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
@@ -126,16 +132,28 @@ routes :: [(ByteString, Handler App App ())]
 routes = [ ("/", index)
          , ("/message", messageHandler)
          , ("/echo/:stuff", echo)
+         , ("/session", with session sessionHandler)
          , ("", with heist heistServe)
          , ("", serveDirectory "static")
          ]
+
+indexSplices =
+    [ ("start-time",   startTimeSplice)
+    , ("current-time", currentTimeSplice)
+    , ("message",      messageSplice)
+    , ("message-form", messageFormSplice)
+-- TODO   , ("session-info", sessionSplice)
+    ]
+
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     sTime <- liftIO getCurrentTime
+    s <- nestSnaplet "sess" session $
+           initCookieSessionManager "site_key.txt" "sess" (Just 3600)
     h <- nestSnaplet "heist" heist $ heistInit "templates"
     addRoutes routes
     msg <- liftIO $ newIORef Nothing
-    return $ App { _heist = h, _startTime = sTime, _message = msg }
+    return $ App { _heist = h, _startTime = sTime, _message = msg, _session = s }

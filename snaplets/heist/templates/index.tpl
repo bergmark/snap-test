@@ -29,6 +29,10 @@
           <td>Edit message:</td>
           <td><message-form/></td>
         </tr>
+        <tr>
+          <td>Session info:</td>
+          <td><session-info/></td>
+        </tr>
       </table>
     </div>
   </body>
