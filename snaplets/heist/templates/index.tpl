@@ -33,6 +33,10 @@
           <td>Session info:</td>
           <td><session-info/></td>
         </tr>
+        <tr>
+          <td>GET foo</td>
+          <td><get-foo/></td>
+        </tr>
       </table>
     </div>
   </body>

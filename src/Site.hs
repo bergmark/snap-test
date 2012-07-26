@@ -47,14 +47,10 @@ import           Forms
 -- Otherwise, the way the route table is currently set up, this action
 -- would be given every request.
 index :: AppHandler ()
---index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
---index = ifTop $ withSplices indexSnapletSplices (heistLocal (bindSplices indexSplices)) $ render "index"
 index = ifTop $ withSplices indexSnapletSplices $ heistLocal (bindSplices indexSplices) $ render "index"
     where
       ws :: HasHeist b => [(T.Text, SnapletSplice b v)] -> Handler b v a -> Handler b v a
       ws = withSplices
---      bss ::  Lens (Snaplet b) (Snaplet v) -> [(Text, SnapletSplice b v)] -> HeistState (Handler b b) -> HeistState (Handler b b)
---      bss = bindSnapletSplices
 
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the start time.
@@ -69,11 +65,19 @@ startTimeSplice = do
 currentTimeSplice :: Splice AppHandler
 currentTimeSplice = do
     time <- liftIO getCurrentTime
-    return $ [TextNode $ T.pack $ show $ time]
+    return [TextNode . T.pack . show $ time]
+
+------------------------------------------------------------------------------
+-- | Splice for GET "foo" parameter
+getFooSplice :: Splice AppHandler
+getFooSplice = do
+  foo <- getParam "foo"
+  return [TextNode $ case foo of
+                       Nothing -> "Nothing"
+                       Just f -> T.decodeUtf8 f]
 
 ------------------------------------------------------------------------------
 -- | The Message
-
 getMessageRefMessage :: HeistT AppHandler (IORef (Maybe Message), Maybe Message)
 getMessageRefMessage = do
   msgRef <- gets _message
@@ -126,7 +130,6 @@ echo = do
 
 ------------------------------------------------------------------------------
 -- | Sessions
-
 sessionSplice :: SnapletSplice App SessionManager
 sessionSplice = do
   liftHandler (setInSession "x" "y")
@@ -149,20 +152,19 @@ routes = [ ("/",            index)
          , ("",             serveDirectory "static")
          ]
 
+------------------------------------------------------------------------------
+-- | Splices
 indexSplices :: [(T.Text, Splice AppHandler)]
 indexSplices =
     [ ("start-time",   startTimeSplice)
     , ("current-time", currentTimeSplice)
     , ("message",      messageSplice)
     , ("message-form", messageFormSplice)
+    , ("get-foo",      getFooSplice)
     ]
 
---indexSnapletSplices :: [(T.Text, SnapletSplice App SessionManager)]
 indexSnapletSplices :: [(T.Text, SnapletSplice App App)]
 indexSnapletSplices = [("session-info", with session sessionSplice)]
---indexSnapletSplices = []
-
-
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
