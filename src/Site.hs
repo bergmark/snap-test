@@ -19,6 +19,7 @@ import           Data.IORef
 import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.ByteString.Char8 as BS
 import           Data.Time.Clock
 ------------------------------------------------------------------------------
 import           Snap.Core
@@ -71,7 +72,7 @@ currentTimeSplice = do
 currentTimeAjax :: AppHandler ()
 currentTimeAjax = do
   time <- liftIO getCurrentTime
-  heistLocal (bindString "current-time" (T.pack $ show $ show $ time)) $ render "current-time-ajax"
+  writeBS $ BS.pack $ concat ["{\"time\":", show $ show $ time, "}"]
   modifyResponse . setContentType $ "text/json;charset=utf-8"
 
 ------------------------------------------------------------------------------
