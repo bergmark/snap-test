@@ -141,12 +141,12 @@ sessionHandler = do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, AppHandler ())]
-routes = [ ("/", index)
-         , ("/message", messageHandler)
+routes = [ ("/",            index)
+         , ("/message",     messageHandler)
          , ("/echo/:stuff", echo)
-         , ("/session", with session sessionHandler)
-         , ("", with heist heistServe)
-         , ("", serveDirectory "static")
+         , ("/session",     with session sessionHandler)
+         , ("",             with heist heistServe)
+         , ("",             serveDirectory "static")
          ]
 
 indexSplices :: [(T.Text, Splice AppHandler)]
