@@ -1,4 +1,4 @@
-<dfForm action="/message">
+<dfForm action="">
   <dfLabel ref="message">Message: </dfLabel>
   <dfInputText ref="message"/>
   <dfChildErrorList ref="message"/>

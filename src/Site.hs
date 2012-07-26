@@ -35,6 +35,10 @@ import           Text.XmlHtml hiding (render)
 import           Application
 import           Forms
 
+-- | Notes
+-- AppHandler = Handler App App
+-- Splice m = HeistT m [Node]
+
 
 ------------------------------------------------------------------------------
 -- | Renders the front page of the sample site.
@@ -42,8 +46,15 @@ import           Forms
 -- The 'ifTop' is required to limit this to the top of a route.
 -- Otherwise, the way the route table is currently set up, this action
 -- would be given every request.
-index :: Handler App App ()
-index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
+index :: AppHandler ()
+--index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
+--index = ifTop $ withSplices indexSnapletSplices (heistLocal (bindSplices indexSplices)) $ render "index"
+index = ifTop $ withSplices indexSnapletSplices $ heistLocal (bindSplices indexSplices) $ render "index"
+    where
+      ws :: HasHeist b => [(T.Text, SnapletSplice b v)] -> Handler b v a -> Handler b v a
+      ws = withSplices
+--      bss ::  Lens (Snaplet b) (Snaplet v) -> [(Text, SnapletSplice b v)] -> HeistState (Handler b b) -> HeistState (Handler b b)
+--      bss = bindSnapletSplices
 
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the start time.
@@ -69,7 +80,7 @@ getMessageRefMessage = do
   msg <- liftIO . readIORef $ msgRef
   return (msgRef, msg)
 
-getMessageRefMessage2 :: Handler App App (IORef (Maybe Message), Maybe Message)
+getMessageRefMessage2 :: AppHandler (IORef (Maybe Message), Maybe Message)
 getMessageRefMessage2 = do
   msgRef <- gets _message
   msg <- liftIO . readIORef $ msgRef
@@ -84,7 +95,7 @@ messageSplice = do
     let msgText = maybe "N/A" _text msg
     return [TextNode msgText]
 
-messageHandler :: Handler App App ()
+messageHandler :: AppHandler ()
 messageHandler = do
   (msgRef, msg) <- getMessageRefMessage2
 
@@ -106,7 +117,7 @@ messageFormSplice = do
 
 ------------------------------------------------------------------------------
 -- | renders the echo page.
-echo :: Handler App App ()
+echo :: AppHandler ()
 echo = do
     echoMsg <- decodedParam "stuff"
     heistLocal (bindString "message" (T.decodeUtf8 echoMsg)) $ render "echo"
@@ -115,11 +126,12 @@ echo = do
 
 ------------------------------------------------------------------------------
 -- | Sessions
--- TODO
---sessionSplice :: Splice (Handler App SessionManager)
---sessionSplice = do
---    msg <- sessionToList
---    return $ [TextNode $ T.pack $ show $ "hej"]
+
+sessionSplice :: SnapletSplice App SessionManager
+sessionSplice = do
+  liftHandler (setInSession "x" "y")
+  msg <- liftHandler sessionToList
+  return $ [TextNode $ T.pack $ show $ msg]
 
 sessionHandler :: Handler App SessionManager ()
 sessionHandler = do
@@ -128,7 +140,7 @@ sessionHandler = do
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
-routes :: [(ByteString, Handler App App ())]
+routes :: [(ByteString, AppHandler ())]
 routes = [ ("/", index)
          , ("/message", messageHandler)
          , ("/echo/:stuff", echo)
@@ -137,13 +149,19 @@ routes = [ ("/", index)
          , ("", serveDirectory "static")
          ]
 
+indexSplices :: [(T.Text, Splice AppHandler)]
 indexSplices =
     [ ("start-time",   startTimeSplice)
     , ("current-time", currentTimeSplice)
     , ("message",      messageSplice)
     , ("message-form", messageFormSplice)
--- TODO   , ("session-info", sessionSplice)
     ]
+
+--indexSnapletSplices :: [(T.Text, SnapletSplice App SessionManager)]
+indexSnapletSplices :: [(T.Text, SnapletSplice App App)]
+indexSnapletSplices = [("session-info", with session sessionSplice)]
+--indexSnapletSplices = []
+
 
 
 ------------------------------------------------------------------------------
