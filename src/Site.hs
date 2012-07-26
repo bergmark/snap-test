@@ -61,13 +61,18 @@ startTimeSplice = do
     time <- lift $ gets _startTime
     return $ [TextNode $ T.pack $ show $ time]
 
-
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the current time.
 currentTimeSplice :: Splice AppHandler
 currentTimeSplice = do
     time <- liftIO getCurrentTime
     return [TextNode . T.pack . show $ time]
+
+currentTimeAjax :: AppHandler ()
+currentTimeAjax = do
+  time <- liftIO getCurrentTime
+  heistLocal (bindString "current-time" (T.pack $ show $ show $ time)) $ render "current-time-ajax"
+  modifyResponse . setContentType $ "text/json;charset=utf-8"
 
 ------------------------------------------------------------------------------
 -- | Splice for GET "foo" parameter
@@ -188,6 +193,8 @@ routes = [ ("/",            index)
          , ("/message",     messageHandler)
          , ("/echo/:stuff", echo)
          , ("/session",     with session sessionHandler)
+
+         , ("/ajax/current-time", currentTimeAjax)
 
          , ("",             with heist heistServe)
          , ("",             serveDirectory "static")

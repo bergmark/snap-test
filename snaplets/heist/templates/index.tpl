@@ -2,6 +2,8 @@
   <head>
     <title>Snap web server</title>
     <link rel="stylesheet" type="text/css" href="/screen.css"/>
+    <script type="text/javascript" src="/jquery.js"></script>
+    <script type="text/javascript" src="/index.js"></script>
   </head>
   <body>
     <div id="content">
@@ -31,6 +33,11 @@
         <tr>
           <td>Page generated at:</td>
           <td><current-time/></td>
+        </tr>
+        <tr>
+          <td>Current time:</td>
+          <td id="current-time"><current-time/></td>
+          <td><input id="current-time-button" type="button" value="Update current time"></td>
         </tr>
         <tr>
           <td>Last posted message:</td>
