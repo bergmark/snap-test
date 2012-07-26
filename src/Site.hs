@@ -23,6 +23,8 @@ import           Data.Time.Clock
 ------------------------------------------------------------------------------
 import           Snap.Core
 import           Snap.Snaplet
+import           Snap.Snaplet.Auth hiding (session)
+import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
@@ -142,12 +144,51 @@ sessionHandler = do
   heistLocal (bindString "session-info" (T.pack $ show $ msg)) $ render "session"
 
 ------------------------------------------------------------------------------
+-- | Render login form
+handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
+handleLogin authError = heistLocal (bindSplices errs) $ render "login"
+  where
+    errs = [("loginError", textSplice c) | c <- maybeToList authError]
+
+
+------------------------------------------------------------------------------
+-- | Handle login submit
+handleLoginSubmit :: Handler App (AuthManager App) ()
+handleLoginSubmit =
+    loginUser "login" "password" Nothing
+              (\_ -> handleLogin err) (redirect "/")
+  where
+    err = Just "Unknown user or password"
+
+
+------------------------------------------------------------------------------
+-- | Logs out and redirects the user to the site index.
+handleLogout :: Handler App (AuthManager App) ()
+handleLogout = logout >> redirect "/"
+
+
+------------------------------------------------------------------------------
+-- | Handle new user form submit
+handleNewUser :: Handler App (AuthManager App) ()
+handleNewUser = method GET handleForm <|> method POST handleFormSubmit
+  where
+    handleForm = render "new_user"
+    handleFormSubmit = registerUser "login" "password" >> redirect "/"
+
+
+------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, AppHandler ())]
 routes = [ ("/",            index)
+
+         , ("/login",       with auth handleLoginSubmit)
+         , ("/logout",      with auth handleLogout)
+         , ("/new_user",    with auth handleNewUser)
+
          , ("/message",     messageHandler)
          , ("/echo/:stuff", echo)
          , ("/session",     with session sessionHandler)
+
          , ("",             with heist heistServe)
          , ("",             serveDirectory "static")
          ]
@@ -170,10 +211,19 @@ indexSnapletSplices = [("session-info", with session sessionSplice)]
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
-    sTime <- liftIO getCurrentTime
     s <- nestSnaplet "sess" session $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
     h <- nestSnaplet "heist" heist $ heistInit "templates"
+    -- NOTE: We're using initJsonFileAuthManager here because it's easy and
+    -- doesn't require any kind of database server to run.  In practice,
+    -- you'll probably want to change this to a more robust auth backend.
+    a <- nestSnaplet "auth" auth $
+           initJsonFileAuthManager defAuthSettings session "users.json"
+
+    addAuthSplices auth
     addRoutes routes
+
+    sTime <- liftIO getCurrentTime
     msg <- liftIO $ newIORef Nothing
-    return $ App { _heist = h, _startTime = sTime, _message = msg, _session = s }
+
+    return $ App { _heist = h, _startTime = sTime, _message = msg, _session = s, _auth = a }

@@ -13,6 +13,7 @@ import Data.Text
 import Data.Time.Clock
 
 import Snap.Snaplet
+import Snap.Snaplet.Auth
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Session
 
@@ -20,6 +21,7 @@ import Snap.Snaplet.Session
 data App = App
     { _heist :: Snaplet (Heist App)
     , _session :: Snaplet SessionManager
+    , _auth :: Snaplet (AuthManager App)
 
     , _startTime :: UTCTime
     , _message :: IORef (Maybe Message)

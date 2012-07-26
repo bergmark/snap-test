@@ -5,13 +5,24 @@
   </head>
   <body>
     <div id="content">
-      <h1>It works!</h1>
-      <p>
-        Echo test:
-        <a href="/echo/cats">cats</a>
-        <a href="/echo/dogs">dogs</a>
-        <a href="/echo/fish">fish</a>
-      </p>
+      <h1>Snap test!</h1>
+
+      <ifLoggedIn>
+        <p>
+          This is a simple demo page served using
+          <a href="http://snapframework.com/docs/tutorials/heist">Heist</a>
+          and the <a href="http://snapframework.com/">Snap</a> web framework.
+        </p>
+
+        <p>Congrats!  You're logged in as '<loggedInUser/>'</p>
+
+        <p><a href="/logout">Logout</a></p>
+      </ifLoggedIn>
+
+      <ifLoggedOut>
+        <apply template="_login"/>
+      </ifLoggedOut>
+
       <table id="info">
         <tr>
           <td>Config generated at:</td>
