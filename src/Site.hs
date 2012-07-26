@@ -14,6 +14,7 @@ module Site
 import           Control.Applicative
 import           Control.Monad.Trans
 import           Control.Monad.State
+import           Data.Aeson
 import           Data.ByteString (ByteString)
 import           Data.IORef
 import           Data.Maybe
@@ -21,7 +22,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as BS
 import           Data.Time.Clock
-------------------------------------------------------------------------------
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth hiding (session)
@@ -72,8 +72,8 @@ currentTimeSplice = do
 currentTimeAjax :: AppHandler ()
 currentTimeAjax = do
   time <- liftIO getCurrentTime
-  writeBS $ BS.pack $ concat ["{\"time\":", show $ show $ time, "}"]
   modifyResponse . setContentType $ "text/json;charset=utf-8"
+  writeLBS $ encode . toJSON $ object ["time" .= show time]
 
 ------------------------------------------------------------------------------
 -- | Splice for GET "foo" parameter
