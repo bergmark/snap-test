@@ -4,6 +4,8 @@
     <link rel="stylesheet" type="text/css" href="/screen.css"/>
     <script type="text/javascript" src="/jquery.js"></script>
     <script type="text/javascript" src="/index.js"></script>
+    <script type="text/javascript" src="/adamHelpers.js"></script>
+    <script type="text/javascript" src="/fay-js/Adam.js"></script>
   </head>
   <body>
     <div id="content">

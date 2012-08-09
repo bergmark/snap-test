@@ -12,7 +12,6 @@ import           Snap.Snaplet.Config
 import           Snap.Core
 import           System.IO
 
-import           BuildFay
 import           Site
 
 #ifdef DEVELOPMENT
@@ -98,7 +97,6 @@ getConf = commandLineAppConfig defaultConfig
 -- sophisticated code might.
 getActions :: Config Snap AppConfig -> IO (Snap (), IO ())
 getActions conf = do
--- TODO    buildFay
     (msgs, site, cleanup) <- runSnaplet (appEnvironment =<< getOther conf) app
     hPutStrLn stderr $ T.unpack msgs
     return (site, cleanup)

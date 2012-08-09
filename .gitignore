@@ -2,3 +2,5 @@
 dist
 log
 site_key.txt
+fay-js/*.js
+snaplets/fay/*.js

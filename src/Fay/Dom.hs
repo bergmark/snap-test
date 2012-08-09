@@ -3,9 +3,6 @@
 
 module Dom where
 
-import Language.Fay.FFI
-import Language.Fay.Prelude
-
 data Element
 instance Foreign Element
 data Event
@@ -16,7 +13,7 @@ data Document
 instance Foreign Document
 
 print :: Foreign a => a -> Fay ()
-print = foreignFay "console.log" ""
+print = ffi "console.log(%1)"
 
 head :: [a] -> a
 head (x:_) = x
@@ -25,43 +22,43 @@ getBody :: Fay Element
 getBody = firstByTag "body"
 
 getWindow :: Fay Global
-getWindow = foreignFay "adamHelpers.getWindow" "Global"
+getWindow = ffi "adamHelpers.getWindow()"
 
 getDocument :: Fay Document
-getDocument = foreignFay "adamHelpers.getDocument" "Document"
+getDocument = ffi "adamHelpers.getDocument()"
 
 firstByTag :: String -> Fay Element
 firstByTag tag = byTag tag >>= (return . head)
 
 byTag :: String -> Fay [Element]
-byTag = foreignFay "document.getElementsByTagName" "array"
+byTag = ffi "document.getElementsByTagName(%1)"
 
 byId :: String -> Fay Element
-byId = foreignFay "document.getElementById" "Element"
+byId = ffi "document.getElementById(%1)"
 
 addEvent :: Foreign f => Element -> String -> (Event -> Fay f) -> Fay ()
-addEvent = foreignMethodFay "addEventListener" ""
+addEvent = ffi "%1.addEventListener(%2,%3)"
 
 addOnload :: Foreign f => Fay f -> Fay ()
-addOnload = foreignFay "adamHelpers.addOnload" ""
+addOnload = ffi "adamHelpers.addOnload(%1)"
 
 stopProp :: Event -> Fay ()
-stopProp = foreignMethodFay "stopPropagation" ""
+stopProp = ffi "%1.stopPropagation()"
 
 preventDefault :: Event -> Fay ()
-preventDefault = foreignMethodFay "preventDefault" ""
+preventDefault = ffi "%1.preventDefault()"
 
 createElement :: String -> Fay Element
-createElement = foreignFay "document.createElement" "Element"
+createElement = ffi "document.createElement(%1)"
 
 setInnerHtml :: Element -> String -> Fay ()
-setInnerHtml = foreignFay "adamHelpers.setInnerHtml" ""
+setInnerHtml = ffi "adamHelpers.setInnerHtml(%1, %2)"
 
 appendChild :: Element -> Element -> Fay ()
-appendChild = foreignMethodFay "appendChild" ""
+appendChild = ffi "%1.appendChild(%2)"
 
-selFirst :: String -> String -> Fay Element
-selFirst func s = sel func s >>= (return . head)
+--selFirst :: String -> String -> Fay Element
+--selFirst func s = sel func s >>= (return . head)
 
-sel :: String -> String -> Fay [Element]
-sel func = foreignFay func ""
+--sel :: String -> String -> Fay [Element]
+--sel func = ffi func ""

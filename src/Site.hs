@@ -20,10 +20,10 @@ import           Data.IORef
 import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Char8 as BS
 import           Data.Time.Clock
 import           Snap.Core
 import           Snap.Snaplet
+import           Snap.Snaplet.Fay
 import           Snap.Snaplet.Auth hiding (session)
 import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Heist
@@ -51,9 +51,9 @@ import           Forms
 -- would be given every request.
 index :: AppHandler ()
 index = ifTop $ withSplices indexSnapletSplices $ heistLocal (bindSplices indexSplices) $ render "index"
-    where
-      ws :: HasHeist b => [(T.Text, SnapletSplice b v)] -> Handler b v a -> Handler b v a
-      ws = withSplices
+--    where
+--      ws :: HasHeist b => [(T.Text, SnapletSplice b v)] -> Handler b v a -> Handler b v a
+--      ws = withSplices
 
 ------------------------------------------------------------------------------
 -- | For your convenience, a splice which shows the start time.
@@ -197,6 +197,7 @@ routes = [ ("/",            index)
 
          , ("/ajax/current-time", currentTimeAjax)
 
+         , ("/fay-js/",     with fay fayServe)
          , ("",             with heist heistServe)
          , ("",             serveDirectory "static")
          ]
@@ -227,11 +228,19 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings session "users.json"
-
+    fay' <- nestSnaplet "fay" fay $ initFay "src/Fay" True
     addAuthSplices auth
     addRoutes routes
 
     sTime <- liftIO getCurrentTime
     msg <- liftIO $ newIORef Nothing
 
-    return $ App { _heist = h, _startTime = sTime, _message = msg, _session = s, _auth = a }
+    return $ App {
+        _heist = h
+      , _session = s
+      , _auth = a
+      , _fay = fay'
+
+      , _startTime = sTime
+      , _message = msg
+      }
